@@ -80,7 +80,6 @@ class Home extends Component {
 						data={this.state.listData}
 						renderItem={({item}) => (
 							<View>
-								<Text>sometext</Text>
 								<Text>{item.user_givenname} {item.user_familyname}</Text>	
 							</View>
 						)}

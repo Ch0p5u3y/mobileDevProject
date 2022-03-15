@@ -1,6 +1,7 @@
 import React, {Component } from 'react';
-import { View, Text, FlatList, Image } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { styles } from '../styles';
 
 class Profile extends Component {
 	constructor(props){
@@ -9,38 +10,50 @@ class Profile extends Component {
 		this.state = {
 			photo: null,
 			isLoading: true,
-			data: []
+			data: [],
+			imageFile: null,
+			setImageFile: null
 		}
-	}
-	
+	}	
+
 	componentDidMount(){
 		this.unsubscribe = this.props.navigation.addListener('focus', () => {
 			this.checkLoggedIn();
 		});
 
 		this._retrieveProfile();
+		this._retrieveProfilePhoto();
 	}
 
 	componentWillUnmount(){
 		this.unsubscibe();
-	}
-	
-	_retrieveProfilePhoto = () => {
-		const value = AsyncStorage.getItem('@session_token');
+	}	
+
+	_retrieveProfilePhoto = async () => {
+		const value = await AsyncStorage.getItem('@session_token');
+		const id = await AsyncStorage.getItem('currentID');
 		fetch("http://localhost:3333/api/1.0.0/user/" + id.toString() + "/photo", {
 			method: 'get',
 			headers: {
-				'X-Authorization': value
+				Accept: 'image/png',
+				'X-Authorization': value,
 			}
-		}).then((res) => {
-			return res.blob();
+		}).then((response) => {
+			if(response.status != 200){
+				throw("Error: " + response.status);
+			}
+			else if(response.status === 200){
+				return response.json()
+			}
+			else(
+				throw 'Something went wrong');	
 		})
-		.then((resBlob) => {
-			let photoData = URL.createObectURL(resBlob);
+		.then((responseJson) => {
+			console.log(reponseJson);
 			this.setState({
-				photo: photoData,
-				isLoading: false
-			});
+				isLoading: false,
+				photo: reponseJson
+			})
 		})
 		.catch((err) => {
 			console.log("error", err)
@@ -116,7 +129,6 @@ class Profile extends Component {
 					<Text>Name: { data.first_name } { data.last_name }</Text>
 					<Text>Email: { data.email }</Text>
 					<Text>Friends: { data.friend_count } </Text>
-					<Text>Upload/Change Photo</Text>
 				</View>
 			);
 		}
@@ -124,3 +136,6 @@ class Profile extends Component {
 }
 
 export default Profile
+
+//need to resolve the following error:
+//error SyntaxError: Unexpected token � in JSON at position 0
